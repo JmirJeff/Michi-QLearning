@@ -42,7 +42,7 @@ class michi():
             else:
                 return 'player2'
         if self.states.item(0,2) == self.states.item(1,1) == self.states.item(2,0) != 0.0:
-            if self.states.item(0,0) == 1:
+            if self.states.item(0,2) == 1:
                 return 'player1'
             else:
                 return 'player2'
@@ -55,6 +55,13 @@ class michi():
             return 1
         else:
             return 2
+
+    def q_table_state(self):
+        s = self.states
+        a = (3**8*s[0,0]+3**7*s[0,1]+3**6*s[0,2]+
+            3**5*s[1,0]+3**4*s[1,1]+3**3*s[1,2]+
+            3**2*s[2,0]+3*s[2,1]+s[2,2])
+        return a
 
 
 # crear la tabla q para el juego
@@ -70,14 +77,34 @@ max_epsilon = 1.0
 min_epsilon = 0.01
 decay_rate = 0.01
 
+# crea la clase de aprendizaje q learning
+class q_learning():
+    def __init__(self,q_table,learning_rate,gamma,epsilon,max_epsilon,min_epsilon,delay_rate):
+        self.table = q_table
+        self.learning_rate = learning_rate
+        self.gamma = gamma
+        self.epsilon = epsilon
+        self.max_epsilon = max_epsilon
+        self.min_epsilon = min_epsilon
+        self.delay_rate = delay_rate
+
+    def play():
+        if self.epsilon >random.random():
+            self.epsilon = self.epsilon - self.delay_rate
+            # se ejecuta exploracion
+            num_actions = self.table.shape[1]
+
+        else:
+            # se ejecuta explotacion
+            pass
 
 print ('Iniciando...')
-print ('Presione cualquier tecla...')
+print ('Presione enter para iniciar...')
 input()
 while (True):
     game = michi()
+    print (game.states)
     while (True):
-        print (game.states)
         if (game.turn()==1):
             jugada = input('ingrese su jugada')
             while (True):
@@ -94,12 +121,15 @@ while (True):
         if ganador == None:
             pass
         if (ganador == 'player1'):
+            print (game.states)
             print ('ganaste')
             break
         elif(ganador == 'player2'):
+            print (game.states)
             print ('te ganaron XD')
             break
         elif (ganador == 'empate'):
+            print (game.states)
             print ('quedo en empate')
             break
         print (game.states)

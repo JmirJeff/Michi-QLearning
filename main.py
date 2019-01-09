@@ -7,6 +7,8 @@ from ast import literal_eval
 # definimos el entorno
 class michi():
     def __init__(self):
+        self.reset()
+    def reset(self):
         self.states = np.zeros((3,3))
         self.player1_turn = random.choice((True,False))
         self.player2_turn = not(self.player1_turn)
@@ -55,13 +57,19 @@ class michi():
             return 1
         else:
             return 2
-
     def q_table_state(self):
         s = self.states
         a = (3**8*s[0,0]+3**7*s[0,1]+3**6*s[0,2]+
             3**5*s[1,0]+3**4*s[1,1]+3**3*s[1,2]+
             3**2*s[2,0]+3*s[2,1]+s[2,2])
         return a
+    def actions_enabled(self):
+        l = []
+        for i in range(3):
+            for j in range(3):
+                if game.states[i,j] == 0.0:
+                    l.append((i,j))
+        return l
 
 
 # crear la tabla q para el juego
@@ -79,7 +87,7 @@ decay_rate = 0.01
 
 # crea la clase de aprendizaje q learning
 class q_learning():
-    def __init__(self,q_table,learning_rate,gamma,epsilon,max_epsilon,min_epsilon,delay_rate):
+    def __init__(self,q_table,learning_rate,gamma,epsilon,max_epsilon,min_epsilon,delay_rate,game):
         self.table = q_table
         self.learning_rate = learning_rate
         self.gamma = gamma
@@ -88,48 +96,57 @@ class q_learning():
         self.min_epsilon = min_epsilon
         self.delay_rate = delay_rate
 
-    def play():
-        if self.epsilon >random.random():
-            self.epsilon = self.epsilon - self.delay_rate
-            # se ejecuta exploracion
-            num_actions = self.table.shape[1]
+        self.episode = 0
 
+        self.game = game
+
+    def play(self):
+        if self.epsilon >random.random():
+            # se ejecuta exploracion
+            action = random.choices(game.actions_enabled())
         else:
             # se ejecuta explotacion
-            pass
+            action = np.argmax(self.table[int(self.game.q_table_state)])
+        self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon)*np.exp(-self.delay_rate*self.episode)
+        self.episode += 1
+        return (int(action/3),int(action%3))
+
+    def upgrade_qtable(self,state,new_state,action,reward):
+        self.q_table[state,action] += self.learning_rate*(reward + gama*np.max(self.q_table[new_state,:])-q_table[state,action])
 
 print ('Iniciando...')
 print ('Presione enter para iniciar...')
 input()
+print ('===================================')
+print ('========== NUEVA PARTIDA ==========')
 while (True):
     game = michi()
-    print (game.states)
+    #print (game.states)
     while (True):
+        print (game.states)
+
         if (game.turn()==1):
-            jugada = input('ingrese su jugada')
+            jugada = input('ingrese su jugada  - ')
             while (True):
                 nex_turn = game.action(literal_eval(jugada))
                 if (nex_turn):
                     break
         else:
-            print ('la red juega')
-            while (True):
-                nex_turn = game.action(random.choices([(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)])[0])
-                if (nex_turn):
-                    break
+            print ('El agente juega')
+
+            game.action(random.choices(game.actions_enabled())[0])
+
         ganador = game.verifica_ganador()
-        if ganador == None:
-            pass
-        if (ganador == 'player1'):
-            print (game.states)
-            print ('ganaste')
-            break
-        elif(ganador == 'player2'):
-            print (game.states)
-            print ('te ganaron XD')
-            break
-        elif (ganador == 'empate'):
-            print (game.states)
-            print ('quedo en empate')
-            break
-        print (game.states)
+        if ganador != None:
+            if (ganador == 'player1'):
+                print (game.states)
+                print ('GANASTE')
+            elif(ganador == 'player2'):
+                print (game.states)
+                print ('PERDISTE')
+            elif (ganador == 'empate'):
+                print (game.states)
+                print ('EMPATE')
+            print ('===================================')
+            print ('========== NUEVA PARTIDA ==========')
+            game.reset()
